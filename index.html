@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hexagonal Lantern Chandelier</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: url('bg.jpg') no-repeat center center fixed; 
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true; // Enable shadow
+    document.body.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0x888888);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff);
+    directionalLight.position.set(1, 10, 1);
+    directionalLight.castShadow = true; // Enable casting shadows
+    scene.add(directionalLight);
+
+    const imagePaths = [
+        '1.jpeg',
+        '2.jpeg',
+        '3.jpeg',
+        '4.jpeg',
+        '5.jpeg',
+        '6.jpeg'
+    ];
+
+    const walls = [];
+    const radius = 3; 
+    const wallHeight = 2; 
+    const segmentAngle = Math.PI / 3; 
+
+    for (let i = 0; i < 6; i++) {
+        const angle = segmentAngle * i;
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+
+        const nextAngle = angle + segmentAngle;
+        const nextX = radius * Math.cos(nextAngle);
+        const nextZ = radius * Math.sin(nextAngle);
+
+        const wallWidth = Math.sqrt((nextX - x) ** 2 + (nextZ - z) ** 2);
+        const geometry = new THREE.PlaneGeometry(wallWidth, wallHeight);
+
+        const texture = new THREE.TextureLoader().load(imagePaths[i]);
+        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+
+        const wall = new THREE.Mesh(geometry, material);
+        wall.position.set((x + nextX) / 2, wallHeight / 2 + 6, (z + nextZ) / 2); // Adjusted to be slightly higher
+        wall.lookAt(new THREE.Vector3(0, wallHeight / 2 + 6, 0)); 
+        wall.receiveShadow = true; // Allow it to receive shadow
+        wall.castShadow = true; // Allow it to cast shadow
+        scene.add(wall);
+        walls.push(wall);
+    }
+
+    // Ground plane for shadow projection
+    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+    const groundMaterial = new THREE.ShadowMaterial();
+    groundMaterial.opacity = 0.5;
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = - Math.PI / 2;
+    ground.position.y = 0;
+    ground.receiveShadow = true; // Allow it to receive shadow
+    scene.add(ground);
+
+    camera.position.set(0, 7, 8); 
+    camera.lookAt(new THREE.Vector3(0, 6, 0));
+
+    const animate = () => {
+        requestAnimationFrame(animate);
+        scene.rotation.y += 0.003; 
+        renderer.render(scene, camera);
+    };
+    animate();
+</script>
+</body>
+</html>
